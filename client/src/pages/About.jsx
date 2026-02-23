@@ -4,8 +4,7 @@ import PageWrapper from "@/components/ui/PageWrapper";
 import { Users, Zap, Shield, Globe, TrendingUp, Heart, ChevronRight } from "lucide-react";
 
 const About = () => {
-  const [expandedPrinciple, setExpandedPrinciple] = useState(null);
-  const [hoveredStat, setHoveredStat] = useState(null);
+  const [hoveredIdx, setHoveredIdx] = useState(null);
   const stats = [
     { value: "10K+", label: "moments shared daily", color: "var(--accent)", icon: TrendingUp },
     { value: "25+", label: "sports from cricket to curling", color: "var(--turf-green)", icon: Globe },
@@ -16,17 +15,26 @@ const About = () => {
     {
       icon: Heart,
       title: "Community First, Always",
-      description: "No algorithm deciding what you see. No ads interrupting your flow. Just pure, unfiltered sports passion from people who actually care."
+      desc: "No algorithm deciding what you see. No ads interrupting your flow. Just pure, unfiltered sports passion from people who actually care.",
+      color: "#22c55e",       // emerald
+      colorLight: "rgba(34, 197, 94, 0.15)",
+      colorGlow: "rgba(34, 197, 94, 0.35)",
     },
     {
       icon: Zap,
       title: "Built for Speed",
-      description: "Upload highlights in seconds. Stream without buffering. React in real-time. Because when the game is on, every second counts."
+      desc: "Upload highlights in seconds. Stream without buffering. React in real-time. Because when the game is on, every second counts.",
+      color: "#00E5FF",       // cyan accent
+      colorLight: "rgba(0, 229, 255, 0.15)",
+      colorGlow: "rgba(0, 229, 255, 0.35)",
     },
     {
       icon: Shield,
       title: "Safe Space, Real Talk",
-      description: "Rivalries are fun. Toxicity isn't. We keep it competitive but respectful, so everyone can bring their A-game without the BS."
+      desc: "Rivalries are fun. Toxicity isn't. We keep it competitive but respectful, so everyone can bring their A-game without the BS.",
+      color: "#a78bfa",       // violet
+      colorLight: "rgba(167, 139, 250, 0.15)",
+      colorGlow: "rgba(167, 139, 250, 0.35)",
     }
   ];
 
@@ -104,7 +112,7 @@ const About = () => {
       {/* Stats Grid */}
       <section className="px-4 md:px-12 py-16">
         <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {stats.map((stat, index) => {
               const IconComponent = stat.icon;
               return (
@@ -117,7 +125,7 @@ const About = () => {
                   whileHover={{ y: -8 }}
                   className="group relative p-6 md:p-8 cursor-pointer overflow-hidden rounded-xl transition-all duration-300 hover-lift"
                   style={{
-                    background: 'var(--bg-surface)',
+                    background: 'var(--tier-1-bg)',
                     border: '1px solid var(--border-subtle)',
                   }}
                 >
@@ -150,7 +158,7 @@ const About = () => {
                     </motion.div>
                     
                     <motion.div 
-                      className="text-4xl md:text-5xl lg:text-6xl font-black mb-3 transition-colors duration-300" 
+                      className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black mb-3 transition-colors duration-300" 
                       style={{ color: stat.color }}
                       whileHover={{ scale: 1.05 }}
                       transition={{ duration: 0.3 }}
@@ -212,114 +220,124 @@ const About = () => {
             What Makes Us Different
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {principles.map((principle, index) => {
-              const IconComponent = principle.icon;
-              const isExpanded = expandedPrinciple === index;
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {principles.map((principle, idx) => {
+              const Icon = principle.icon;
+              const isHovered = hoveredIdx === idx;
               
               return (
                 <motion.div
-                  key={index}
+                  key={idx}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: index * 0.15 }}
-                  onClick={() => setExpandedPrinciple(isExpanded ? null : index)}
-                  whileHover={{ y: -8 }}
-                  className="group relative p-6 md:p-8 cursor-pointer overflow-hidden rounded-xl transition-all duration-300 hover-lift"
+                  transition={{ delay: idx * 0.15 }}
+                  onMouseEnter={() => setHoveredIdx(idx)}
+                  onMouseLeave={() => setHoveredIdx(null)}
+                  className="relative p-6 rounded-xl border overflow-hidden cursor-pointer"
                   style={{
-                    background: 'var(--bg-surface)',
-                    border: isExpanded ? '2px solid var(--accent)' : '1px solid var(--border-subtle)',
-                    minHeight: isExpanded ? '320px' : '280px'
+                    background: isHovered
+                      ? `linear-gradient(135deg, ${principle.colorLight} 0%, var(--tier-1-bg) 60%)`
+                      : 'var(--tier-1-bg)',
+                    borderColor: isHovered ? principle.color : 'var(--border-subtle)',
+                    boxShadow: isHovered
+                      ? `0 0 20px ${principle.colorGlow}, 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 ${principle.colorLight}`
+                      : 'inset 0 0 0 1px rgba(255,255,255,0.03)',
+                    transform: isHovered ? 'translateY(-6px)' : 'translateY(0)',
+                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                   }}
                 >
-                  {/* Animated gradient background on hover */}
-                  <motion.div 
-                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"
-                    style={{ 
-                      background: 'linear-gradient(135deg, var(--accent)15, var(--turf-green)05)',
-                      pointerEvents: 'none'
+                  {/* Shimmer sweep on hover */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      background: `linear-gradient(105deg, transparent 40%, ${principle.colorLight} 50%, transparent 60%)`,
+                      backgroundSize: '200% 100%',
+                      backgroundPosition: isHovered ? '100% 0' : '-100% 0',
+                      transition: 'background-position 0.8s ease',
+                      pointerEvents: 'none',
+                      zIndex: 0,
+                      opacity: isHovered ? 1 : 0,
                     }}
                   />
-                  
-                  {/* Glow effect on hover */}
-                  <motion.div
-                    className="absolute -inset-1 opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-300 rounded-xl"
-                    style={{ background: 'var(--accent)' }}
-                    animate={{ opacity: isExpanded ? 0.3 : 0 }}
+
+                  {/* Top accent line */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: '10%',
+                      right: '10%',
+                      height: '2px',
+                      background: `linear-gradient(90deg, transparent, ${principle.color}, transparent)`,
+                      opacity: isHovered ? 1 : 0,
+                      transition: 'opacity 0.4s ease, left 0.4s ease, right 0.4s ease',
+                      ...(isHovered ? { left: '5%', right: '5%' } : {}),
+                    }}
                   />
 
-                  <div className="relative z-10">
-                    <div className="flex items-start justify-between mb-4">
-                      <motion.div
-                        animate={{ 
-                          rotate: isExpanded ? 360 : 0,
-                          scale: isExpanded ? 1.2 : 1
-                        }}
-                        whileHover={{ scale: 1.15 }}
-                        transition={{ duration: 0.4 }}
-                      >
-                        <IconComponent 
-                          className="w-10 h-10 md:w-12 md:h-12 transition-colors duration-300" 
-                          style={{ color: 'var(--accent)' }} 
-                          strokeWidth={1.5}
-                        />
-                      </motion.div>
-                      
-                      <motion.div
-                        animate={{ rotate: isExpanded ? 90 : 0 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <ChevronRight 
-                          className="w-5 h-5 md:w-6 md:h-6 transition-colors duration-300" 
-                          style={{ color: 'var(--accent)' }}
-                        />
-                      </motion.div>
-                    </div>
-
-                    <h3 className="text-lg md:text-xl font-bold mb-3 transition-colors duration-300" style={{ color: 'var(--text-main)' }}>
-                      {principle.title}
-                    </h3>
-
-                    <motion.div
-                      initial={{ opacity: 0.7 }}
-                      animate={{ opacity: isExpanded ? 1 : 0.7 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <p style={{ 
-                        color: 'var(--text-sub)', 
-                        lineHeight: '1.7',
-                        fontSize: isExpanded ? '0.95rem' : '0.9rem',
-                        transition: 'all 0.3s ease'
-                      }}>
-                        {principle.description}
-                      </p>
-                    </motion.div>
-
-                    {isExpanded && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                        className="mt-4 pt-4 border-t"
-                        style={{ borderColor: 'var(--border-subtle)' }}
-                      >
-                        <p className="text-xs md:text-sm font-semibold transition-colors duration-300" style={{ color: 'var(--accent)' }}>
-                          ✓ Click to collapse
-                        </p>
-                      </motion.div>
-                    )}
+                  {/* Icon container */}
+                  <div
+                    className="relative mb-4 w-12 h-12 rounded-lg flex items-center justify-center"
+                    style={{
+                      background: isHovered ? principle.colorLight : 'var(--accent-glow)',
+                      transform: isHovered ? 'scale(1.1) rotate(-6deg)' : 'scale(1) rotate(0deg)',
+                      transition: 'all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+                      boxShadow: isHovered ? `0 0 16px ${principle.colorGlow}` : 'none',
+                      zIndex: 1,
+                    }}
+                  >
+                    <Icon
+                      className="w-6 h-6"
+                      style={{
+                        color: isHovered ? principle.color : 'var(--accent)',
+                        transition: 'color 0.3s ease',
+                        filter: isHovered ? `drop-shadow(0 0 6px ${principle.colorGlow})` : 'none',
+                      }}
+                    />
                   </div>
 
-                  {/* Border glow on hover */}
-                  <motion.div
-                    className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  {/* Title */}
+                  <h3
+                    className="relative text-lg font-bold mb-2"
                     style={{
-                      border: '2px solid var(--accent)',
-                      boxShadow: '0 0 20px var(--accent)40',
-                      pointerEvents: 'none'
+                      color: isHovered ? principle.color : 'var(--ice-white)',
+                      transition: 'color 0.3s ease',
+                      zIndex: 1,
                     }}
-                    animate={{ opacity: isExpanded ? 0.5 : 0 }}
+                  >
+                    {principle.title}
+                  </h3>
+
+                  {/* Description */}
+                  <p
+                    className="relative text-sm"
+                    style={{
+                      color: isHovered ? 'var(--ice-white-soft)' : 'var(--text-sub)',
+                      transition: 'color 0.3s ease',
+                      zIndex: 1,
+                      lineHeight: '1.7'
+                    }}
+                  >
+                    {principle.desc}
+                  </p>
+
+                  {/* Bottom glow bar */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: '20%',
+                      right: '20%',
+                      height: '1px',
+                      background: `radial-gradient(ellipse at center, ${principle.color} 0%, transparent 70%)`,
+                      opacity: isHovered ? 0.6 : 0,
+                      transition: 'opacity 0.4s ease',
+                    }}
                   />
                 </motion.div>
               );
