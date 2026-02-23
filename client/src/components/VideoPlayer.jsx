@@ -49,6 +49,15 @@ const VideoPlayer = ({ video, onClose }) => {
     }
   }, [isPlaying, hasViewed, videoId]);
 
+  // Close modal on Escape key (#156)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   const handleLike = async () => {
     const token = getToken();
     if (!token) {
