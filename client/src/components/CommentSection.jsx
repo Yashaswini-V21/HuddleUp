@@ -70,8 +70,8 @@ export default function CommentSection({ contentId, contentType }) {
             >
               <MessageCircle className="w-6 h-6" style={{ color: 'var(--accent)' }} />
             </div>
-            <div>
-              <h2 className="text-xl font-bold" style={{ color: 'var(--ice-white)' }}>Discussion Thread</h2>
+              <div>
+              <h2 className="text-xl font-bold" style={{ color: 'var(--text-main)' }}>Discussion Thread</h2>
               <p className="text-sm" style={{ color: 'var(--text-sub)' }}>
                 {comments.length} {comments.length === 1 ? 'comment' : 'comments'} • Join the debate
               </p>

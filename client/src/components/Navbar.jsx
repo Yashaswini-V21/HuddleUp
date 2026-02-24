@@ -121,7 +121,12 @@ fetchNotifications();
       initial={{ y: -80, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6 }}
-      className="sticky top-0 z-50 backdrop-blur-2xl bg-black/70 border-b border-white/10 shadow-lg"
+      className="sticky top-0 z-50 backdrop-blur-2xl transition-colors duration-300"
+      style={{
+        background: 'var(--surface-bar-bg)',
+        borderBottom: '1px solid var(--border-subtle)',
+        boxShadow: 'var(--surface-bar-shadow)'
+      }}
     >
       <div className="max-w-7xl mx-auto px-6">
         <div className="h-16 flex items-center justify-between">
@@ -151,7 +156,7 @@ fetchNotifications();
                       ${
                         isActive
                           ? "text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500"
-                          : "text-zinc-400 hover:text-white"
+                          : "dark:text-zinc-400 dark:hover:text-white text-slate-500 hover:text-slate-900"
                       }`}
                     >
                       {label}
@@ -174,7 +179,7 @@ fetchNotifications();
           <div className="hidden md:flex items-center gap-6">
             <button
               onClick={toggleTheme}
-              className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-zinc-400 hover:text-emerald-400 transition-all duration-300 relative group"
+              className="p-2.5 rounded-xl dark:bg-white/5 bg-slate-100 dark:border-white/10 border-slate-200 border dark:text-zinc-400 text-slate-500 hover:text-emerald-500 dark:hover:text-emerald-400 transition-all duration-300 relative group"
               aria-label="Toggle theme"
             >
               {theme === "dark" ? (
@@ -385,10 +390,10 @@ fetchNotifications();
               <div className="md:hidden border-t border-white/10 bg-zinc-950/95 backdrop-blur-xl relative z-50">
                 <div className="px-6 py-4 space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-zinc-400">Theme</span>
+                    <span className="text-sm dark:text-zinc-400 text-slate-600">Theme</span>
                     <button
                       onClick={toggleTheme}
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs text-zinc-300"
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-full dark:bg-white/5 bg-slate-100 dark:border-white/10 border-slate-300 border text-xs dark:text-zinc-300 text-slate-700"
                     >
                       {theme === "dark" ? (
                         <>
@@ -408,7 +413,7 @@ fetchNotifications();
                     <NavLink
                       key={to}
                       to={to}
-                      className="block text-zinc-300 hover:text-white transition"
+                      className="block dark:text-zinc-300 text-slate-600 dark:hover:text-white hover:text-slate-900 transition"
                     >
                       {label}
                     </NavLink>

@@ -264,7 +264,7 @@ const Explore = () => {
           className="px-6 md:px-12 pt-12 pb-8"
         >
           <div className="max-w-7xl mx-auto">
-            <h1 className="text-4xl md:text-6xl font-black mb-4" style={{ color: 'var(--ice-white)' }}>
+            <h1 className="text-4xl md:text-6xl font-black mb-4" style={{ color: 'var(--text-main)' }}>
               Explore{' '}
               <span style={{
                 background: 'linear-gradient(135deg, #10b981, #06b6d4)',

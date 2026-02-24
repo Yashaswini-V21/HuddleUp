@@ -40,7 +40,7 @@ function AppContent() {
   // Auth pages: full width, no container constraints
   if (hideLayout) {
     return (
-      <div className="min-h-screen bg-zinc-950">
+      <div className="min-h-screen dark:bg-zinc-950 bg-transparent">
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
             <Route path="/register" element={<Register />} />
@@ -55,7 +55,7 @@ function AppContent() {
 
   // Main app: wrapped in container
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col">
+    <div className="min-h-screen dark:bg-zinc-950 bg-transparent flex flex-col">
       <Navbar />
       <main className="flex-grow">
         <div className="container mx-auto px-6 py-8">
