@@ -1,11 +1,12 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import PageWrapper from "@/components/ui/PageWrapper";
 import PageMeta from "@/components/PageMeta";
+import VideoUploadProgress from "@/components/VideoUploadProgress";
 import { UploadCloud, X, CheckCircle, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
-import { API } from "../api";
+import { useVideoUpload } from "@/hooks/useVideoUpload";
 
 const MAX_FILE_SIZE_MB = 100;
 const MAX_TITLE_LENGTH = 100;
@@ -137,12 +138,36 @@ const Upload = () => {
   const [category, setCategory] = useState("");
   const [videoFile, setVideoFile] = useState(null);
   const [previewURL, setPreviewURL] = useState(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [isUploading, setIsUploading] = useState(false);
   const [fileError, setFileError] = useState("");
   const [isDragging, setIsDragging] = useState(false);
 
   const { errors, validateField, validateAll, clearError, validators } = useFormValidation();
+  const {
+    uploadVideo,
+    checkProcessingStatus,
+    uploadStatus,
+    uploadProgress,
+    processingProgress,
+    error: uploadError,
+    videoId,
+  } = useVideoUpload();
+
+  useEffect(() => {
+    if (uploadStatus === "processing" && videoId) {
+      const interval = setInterval(async () => {
+        const status = await checkProcessingStatus(videoId);
+        if (status?.status === "completed" || status?.status === "failed") {
+          clearInterval(interval);
+          if (status.status === "completed") {
+            toast.success("Video processed successfully!");
+            setTimeout(() => navigate("/explore"), 2000);
+          }
+        }
+      }, 3000);
+
+      return () => clearInterval(interval);
+    }
+  }, [uploadStatus, videoId, checkProcessingStatus, navigate]);
 
   const isFormValid =
     !validators.validateTitle(title) &&
@@ -203,24 +228,10 @@ const Upload = () => {
     formData.append("video", videoFile);
 
     try {
-      setIsUploading(true);
-
-      await API.post("/video/upload", formData, {
-        onUploadProgress: (progressEvent) => {
-          const percent = Math.round(
-            (progressEvent.loaded * 100) / progressEvent.total
-          );
-          setUploadProgress(percent);
-        },
-      });
-
-      toast.success("Video Uploaded Successfully 🚀");
-      navigate("/explore");
+      await uploadVideo(formData);
+      toast.success("Video uploaded! Processing started...");
     } catch (err) {
-      toast.error("Upload failed");
-    } finally {
-      setIsUploading(false);
-      setUploadProgress(0);
+      toast.error(uploadError || "Upload failed");
     }
   };
 
@@ -484,30 +495,31 @@ const Upload = () => {
                 </div>
 
                 {/* Upload Progress */}
-                {isUploading && (
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium" style={{ color: 'var(--text-main)' }}>
-                        Publishing...
-                      </span>
-                      <span className="text-sm font-mono" style={{ color: 'var(--turf-green)' }}>
-                        {uploadProgress}%
-                      </span>
-                    </div>
-                    <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
-                      <div
-                        className="h-full transition-all"
-                        style={{
-                          width: `${uploadProgress}%`,
-                          background: 'linear-gradient(90deg, var(--turf-green), var(--accent))'
-                        }}
-                      />
-                    </div>
-                  </div>
+                {(uploadStatus === "uploading" || uploadStatus === "processing") && (
+                  <VideoUploadProgress
+                    status={uploadStatus}
+                    progress={uploadStatus === "uploading" ? uploadProgress : processingProgress}
+                    error={uploadError}
+                  />
+                )}
+
+                {uploadStatus === "completed" && (
+                  <VideoUploadProgress
+                    status="completed"
+                    progress={100}
+                  />
+                )}
+
+                {uploadStatus === "failed" && (
+                  <VideoUploadProgress
+                    status="failed"
+                    progress={0}
+                    error={uploadError}
+                  />
                 )}
 
                 {/* Ready to Publish Message */}
-                {isFormValid && !isUploading && (
+                {isFormValid && uploadStatus === "idle" && (
                   <div className="flex items-center justify-center gap-2 mb-4 text-green-500 font-bold">
                     <CheckCircle className="w-5 h-5" />
                     <span>All good! Ready to publish</span>
@@ -517,7 +529,7 @@ const Upload = () => {
                 {/* Publish Button */}
                 <motion.button
                   type="submit"
-                  disabled={isUploading}
+                  disabled={uploadStatus !== "idle"}
                   whileTap={{ scale: 0.98 }}
                   whileHover={{ scale: 1.01 }}
                   transition={{ type: "spring", stiffness: 300 }}
@@ -528,11 +540,13 @@ const Upload = () => {
                     borderRadius: 'var(--r-md)',
                     boxShadow: '0 8px 24px rgba(16, 185, 129, 0.3)',
                     letterSpacing: '0.05em',
-                    opacity: (!isFormValid || isUploading) ? 0.6 : 1,
-                    cursor: isUploading ? 'not-allowed' : 'pointer',
+                    opacity: (!isFormValid || uploadStatus !== "idle") ? 0.6 : 1,
+                    cursor: uploadStatus !== "idle" ? 'not-allowed' : 'pointer',
                   }}
                 >
-                  {isUploading ? "Publishing..." : "Publish to Arena"}
+                  {uploadStatus === "uploading" ? "Uploading..." : 
+                   uploadStatus === "processing" ? "Processing..." : 
+                   "Publish to Arena"}
                 </motion.button>
               </div>
             </motion.form>

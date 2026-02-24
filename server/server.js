@@ -7,6 +7,7 @@ const cors = require("cors")
 const path = require('path');
 const { initRedis } = require("./config/redis");
 const { apiLimiter, authLimiter } = require("./middleware/rateLimit");
+const { videoQueue } = require("./services/videoQueue");
 const authRoutes = require("./routes/auth")
 const videoRoutes = require("./routes/video")
 const commentRoutes = require("./routes/comment")

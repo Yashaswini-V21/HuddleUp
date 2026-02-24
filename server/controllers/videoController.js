@@ -1,11 +1,10 @@
 const Video = require("../models/Video");
 const { deleteCachePattern } = require("../utils/cache");
+const { addVideoToQueue } = require("../services/videoQueue");
+const path = require("path");
 
 exports.createVideo = async (req, res) => {
   try {
-    console.log("File:", req.file);
-    console.log("Body:", req.body);
-
     if (!req.user || !req.user.id) {
       return res.status(401).json({ message: "Unauthorized: User not authenticated" });
     }
@@ -16,24 +15,39 @@ exports.createVideo = async (req, res) => {
     }
 
     const videoUrl = `/uploads/${req.file.filename}`;
+    const inputPath = path.join(__dirname, "..", "uploads", req.file.filename);
+
     const newVideo = new Video({
       title,
       description,
       category,
       videoUrl,
       postedBy: req.user.id,
+      processingStatus: "pending",
+      processingProgress: 0,
     });
+
     await newVideo.save();
+
+    const jobId = await addVideoToQueue(newVideo._id.toString(), inputPath, req.user.id);
+    
+    await Video.findByIdAndUpdate(newVideo._id, {
+      jobId,
+      processingStatus: "processing",
+    });
+
     await deleteCachePattern("feed:*");
-    res.status(201).json({ message: "Video Uploaded Successfully", video: newVideo });
 
-  }
-  catch (err) {
+    res.status(201).json({
+      message: "Video uploaded and processing started",
+      video: newVideo,
+      jobId,
+    });
+  } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Error uploading video", error: err.message })
+    res.status(500).json({ message: "Error uploading video", error: err.message });
   }
-
-}
+};
 
 exports.getAllVideos = async (req, res) => {
   try {
@@ -143,5 +157,30 @@ exports.updateVideo = async (req, res) => {
   } catch (err) {
     console.error('❌ updateVideo error:', err);
     res.status(500).json({ message: "Error updating video", error: err.message });
+  }
+};
+
+exports.getProcessingStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const video = await Video.findById(id).select(
+      "processingStatus processingProgress processingError jobId"
+    );
+
+    if (!video) {
+      return res.status(404).json({ message: "Video not found" });
+    }
+
+    res.json({
+      videoId: id,
+      status: video.processingStatus,
+      progress: video.processingProgress,
+      error: video.processingError,
+      jobId: video.jobId,
+    });
+  } catch (err) {
+    console.error("Error fetching processing status:", err);
+    res.status(500).json({ message: "Error fetching status", error: err.message });
   }
 };
