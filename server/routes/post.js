@@ -3,9 +3,10 @@ const router = express.Router();
 const { createPost, getAllPosts, likePost, deletePost, updatePost } = require("../controllers/postController");
 const { verifyToken } = require("../middleware/auth");
 const { postValidator } = require("../middleware/validation");
+const { postCreationLimiter } = require("../middleware/rateLimit");
 
 // Create & read posts
-router.post("/posts", verifyToken, postValidator, createPost);
+router.post("/posts", verifyToken, postCreationLimiter, postValidator, createPost);
 router.get("/posts", getAllPosts);
 
 // Interactions

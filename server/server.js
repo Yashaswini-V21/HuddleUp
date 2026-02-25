@@ -6,7 +6,17 @@ const dotenv = require("dotenv")
 const cors = require("cors")
 const path = require('path');
 const { initRedis } = require("./config/redis");
-const { apiLimiter, authLimiter } = require("./middleware/rateLimit");
+const { 
+  apiLimiter, 
+  authLimiter, 
+  feedLimiter,
+  videoUploadLimiter,
+  searchLimiter,
+  commentLimiter,
+  postCreationLimiter,
+  passwordResetLimiter,
+  adminLimiter
+} = require("./middleware/rateLimit");
 const { videoQueue } = require("./services/videoQueue");
 const authRoutes = require("./routes/auth")
 const videoRoutes = require("./routes/video")
@@ -72,8 +82,8 @@ app.use("/api", apiLimiter, friendRoutes)
 app.use("/api", apiLimiter, userRoutes)
 app.use("/api", apiLimiter, savedRoutes)
 app.use("/api/notifications", apiLimiter, notificationRoutes);
-app.use("/api/admin", apiLimiter, adminRoutes);
-app.use("/api/feed", feedRoutes);
+app.use("/api/admin", adminLimiter, adminRoutes);
+app.use("/api/feed", feedLimiter, feedRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.get("/api", (req, res) => {
