@@ -32,6 +32,8 @@ import Footer from './components/Footer';
 import AllPosts from './components/AllPosts';
 import CreatePost from './components/CreatePost';
 import BackToTopBtn from './components/BackToTopBtn';
+import ErrorBoundary from './components/ErrorBoundary';
+import ErrorFallback from './components/ErrorFallback';
 
 function AppContent() {
   const location = useLocation();
@@ -93,9 +95,15 @@ import { NotificationProvider } from './context/NotificationContext';
 export default function App() {
   return (
     <Router>
-      <NotificationProvider>
-        <AppContent />
-      </NotificationProvider>
+      <ErrorBoundary
+        fallback={({ resetErrorBoundary }) => (
+          <ErrorFallback resetErrorBoundary={resetErrorBoundary} />
+        )}
+      >
+        <NotificationProvider>
+          <AppContent />
+        </NotificationProvider>
+      </ErrorBoundary>
       <Toaster richColors position="top-center" closeButton />
     </Router>
   );
