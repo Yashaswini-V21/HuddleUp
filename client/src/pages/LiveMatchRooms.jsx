@@ -14,30 +14,30 @@ const mockMatch = {
 };
 
 export default function LiveMatchRooms() {
-    // Mock player stats
-    const [playerStats] = useState([
-      { name: "Rohit Sharma", runs: 52, balls: 38, fours: 6, sixes: 2, strikeRate: 136.8 },
-      { name: "Virat Kohli", runs: 41, balls: 29, fours: 4, sixes: 1, strikeRate: 141.4 },
-      { name: "KL Rahul", runs: 18, balls: 22, fours: 2, sixes: 0, strikeRate: 81.8 },
-      { name: "Pat Cummins", wickets: 2, overs: 6, runsGiven: 32, economy: 5.33 },
-    ]);
+  // Mock player stats
+  const [playerStats] = useState([
+    { name: "Rohit Sharma", runs: 52, balls: 38, fours: 6, sixes: 2, strikeRate: 136.8 },
+    { name: "Virat Kohli", runs: 41, balls: 29, fours: 4, sixes: 1, strikeRate: 141.4 },
+    { name: "KL Rahul", runs: 18, balls: 22, fours: 2, sixes: 0, strikeRate: 81.8 },
+    { name: "Pat Cummins", wickets: 2, overs: 6, runsGiven: 32, economy: 5.33 },
+  ]);
 
-    // Emoji reactions for chat
-    const emojiList = ["👍", "😂", "🔥", "👏", "🏏", "😮", "❤️"];
-    const [reactions, setReactions] = useState({});
+  // Emoji reactions for chat
+  const emojiList = ["👍", "😂", "🔥", "👏", "🏏", "😮", "❤️"];
+  const [reactions, setReactions] = useState({});
 
-    const addReaction = (msgIdx, emoji) => {
-      setReactions((prev) => {
-        const msgReactions = prev[msgIdx] || {};
-        return {
-          ...prev,
-          [msgIdx]: {
-            ...msgReactions,
-            [emoji]: (msgReactions[emoji] || 0) + 1,
-          },
-        };
-      });
-    };
+  const addReaction = (msgIdx, emoji) => {
+    setReactions((prev) => {
+      const msgReactions = prev[msgIdx] || {};
+      return {
+        ...prev,
+        [msgIdx]: {
+          ...msgReactions,
+          [emoji]: (msgReactions[emoji] || 0) + 1,
+        },
+      };
+    });
+  };
   const [messages, setMessages] = useState([
     { user: "System", text: "Welcome to the live match room!", time: new Date() },
   ]);
@@ -174,7 +174,7 @@ export default function LiveMatchRooms() {
                 Auto-updating
               </span>
             </h3>
-            
+
             <div className="space-y-3 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
               {matchEvents.map((event) => (
                 <div
@@ -206,7 +206,7 @@ export default function LiveMatchRooms() {
                     {event.type === 'wide' && '〰️'}
                     {event.type === 'noBall' && '⭕'}
                   </div>
-                  
+
                   {/* Event Details */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
@@ -285,16 +285,14 @@ export default function LiveMatchRooms() {
             {messages.map((msg, i) => (
               <div
                 key={i}
-                className={`flex ${
-                  msg.user === "You" ? "justify-end" : "justify-start"
-                }`}
+                className={`flex ${msg.user === "You" ? "justify-end" : "justify-start"
+                  }`}
               >
                 <div
-                  className={`px-4 py-2 rounded-2xl max-w-[70%] shadow-lg transition-all duration-300 hover:scale-105 ${
-                    msg.user === "You"
+                  className={`px-4 py-2 rounded-2xl max-w-[70%] shadow-lg transition-all duration-300 hover:scale-105 ${msg.user === "You"
                       ? "bg-indigo-600 text-white"
                       : "bg-slate-200 text-gray-900"
-                  }`}
+                    }`}
                 >
                   <div className="text-xs opacity-70">
                     {msg.user} • {msg.time.toLocaleTimeString()}
@@ -329,9 +327,9 @@ export default function LiveMatchRooms() {
           </div>
 
           {/* Input */}
-          <div className="flex gap-3 mt-4">
+          <div className="flex gap-2 sm:gap-3 mt-4 items-center overflow-hidden">
             <input
-              className="flex-1 bg-white/20 border border-white/20 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white placeholder-gray-400"
+              className="flex-1 min-w-0 bg-white/20 border border-white/20 rounded-xl px-3 sm:px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white placeholder-gray-400"
               value={input}
               onChange={(e) => {
                 setInput(e.target.value);
@@ -342,7 +340,7 @@ export default function LiveMatchRooms() {
             />
             <button
               onClick={sendMessage}
-              className="px-6 py-2 rounded-xl font-semibold bg-gradient-to-r from-indigo-500 to-purple-600 hover:shadow-lg hover:shadow-indigo-500/50 hover:scale-105 transition-all duration-300"
+              className="flex-shrink-0 px-4 sm:px-6 py-2 rounded-xl font-semibold whitespace-nowrap bg-gradient-to-r from-indigo-500 to-purple-600 hover:shadow-lg hover:shadow-indigo-500/50 hover:scale-105 transition-all duration-300"
             >
               Send
             </button>
