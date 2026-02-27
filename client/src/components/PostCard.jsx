@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { Heart, MessageCircle, Calendar, Tag, User, Trash2, Pencil, Share2, Link2, ArrowBigUp, ArrowBigDown, Pin, MoreHorizontal, Bookmark } from 'lucide-react';
 import CommentSection from './CommentSection';
+import MentionText from './MentionText';
 import { API } from '@/api';
 import { getToken, getUserId } from '@/utils/auth';
 import { getShareUrl, shareLink, copyLinkToClipboard } from '@/utils/share';
@@ -248,7 +249,7 @@ const PostCard = ({ post, onDelete, isPinned = false, isSaved = false, onSaveTog
                 color: 'var(--text-sub)'
               }}
             >
-              {post.content}
+              <MentionText text={post.content} />
             </p>
           </div>
 
