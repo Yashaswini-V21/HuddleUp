@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { motion } from 'framer-motion';
 import PageWrapper from '@/components/ui/PageWrapper';
@@ -6,6 +6,7 @@ import PageMeta from '@/components/PageMeta';
 import EmptyState from '@/components/ui/EmptyState';
 import { TrendingUp, Clock, Flame, Globe, ChevronRight, Search, Play, User, Link2, Video, Bookmark, Eye, Heart } from 'lucide-react';
 import VideoPlayer from '@/components/VideoPlayer';
+import ShareMenu from '@/components/ui/ShareMenu';
 import { API } from '@/api';
 import { toast } from 'sonner';
 import { getShareUrl, copyLinkToClipboard } from '@/utils/share';
@@ -24,14 +25,21 @@ const Explore = () => {
   const [sortBy, setSortBy] = useState('newest'); // newest | views | likes
   const [allVideos, setAllVideos] = useState([]);
   const hasSearch = searchTerm.trim() !== '' || activeFilter !== 'ALL';
+  const fetchInProgressRef = useRef(false);
 
   const fetchAllVideos = async () => {
+    // Prevent duplicate requests
+    if (fetchInProgressRef.current) return;
+    
+    fetchInProgressRef.current = true;
     try {
       const params = sortBy ? { sort: sortBy } : {};
       const res = await API.get("/videos", { params });
       setAllVideos(Array.isArray(res.data) ? res.data : []);
     } catch (error) {
       console.error("Error fetching videos:", error);
+    } finally {
+      fetchInProgressRef.current = false;
     }
   };
 
@@ -173,6 +181,11 @@ const Explore = () => {
           >
             <Bookmark className={`w-4 h-4 ${isVideoSaved(video._id) ? 'fill-current' : ''}`} />
           </button>
+          <ShareMenu 
+            url={getShareUrl('video', video._id || video.id)}
+            title={video.title}
+            description={video.description}
+          />
           <button
             onClick={(e) => handleCopyLink(e, video)}
             className="p-2 rounded-lg transition-opacity hover:opacity-100 opacity-90"
