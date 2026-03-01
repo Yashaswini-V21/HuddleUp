@@ -96,6 +96,7 @@ export default function Navbar() {
     { to: "/live-match", label: "Live Match Room" },
     { to: "/upload", label: "Upload" },
     { to: "/explore", label: "Explore" },
+    { to: "/analytics", label: "Analytics" },
     { to: "/posts", label: "Discussion" },
     { to: "/contact", label: "Contact" },
     { to: "/about", label: "About" },

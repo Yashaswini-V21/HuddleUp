@@ -21,6 +21,7 @@ import TermsOfService from './pages/TermsOfService';
 import Admin from './pages/Admin';
 import LiveMatchRooms from './pages/LiveMatchRooms';
 import CommunityGuidelines from './pages/CommunityGuidelines';
+import Analytics from './pages/Analytics';
 
 // Components
 import Navbar from './components/Navbar';
@@ -72,6 +73,7 @@ function AppContent() {
             <Route path="/Feedback" element={<Feedback />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/live-match" element={<LiveMatchRooms />} />
+            <Route path="/analytics" element={<Analytics />} />
           </Routes>
         </div>
       </main>
