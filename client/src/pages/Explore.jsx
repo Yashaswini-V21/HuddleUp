@@ -44,21 +44,20 @@ const Explore = () => {
   };
 
   const getFilteredVideos = () => {
-  return allVideos.filter((video) => {
+    return allVideos.filter((video) => {
+      // Search filter
+      const matchesSearch =
+        searchTerm.trim() === '' ||
+        video.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        video.description?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    // Search filter
-    const matchesSearch =
-      searchTerm.trim() === '' ||
-      video.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      video.description?.toLowerCase().includes(searchTerm.toLowerCase());
+      // Category filter
+      const matchesCategory =
+        activeFilter === 'ALL' || video.category === activeFilter;
 
-    // Category filter
-    const matchesCategory =
-      activeFilter === 'ALL' || video.category === activeFilter;
-
-    return matchesSearch && matchesCategory;
-  });
-};
+      return matchesSearch && matchesCategory;
+    });
+  };
 
   useEffect(() => {
     fetchAllVideos();
@@ -67,6 +66,14 @@ const Explore = () => {
   useEffect(() => {
     if (location.pathname === "/explore") fetchAllVideos();
   }, [location.pathname]);
+
+  // Handle search parameter from URL (e.g., from hashtag links)
+  useEffect(() => {
+    const query = searchParams.get('search');
+    if (query) {
+      setSearchTerm(query);
+    }
+  }, [searchParams]);
 
   const shareVideoId = searchParams.get('video');
   useEffect(() => {
@@ -120,7 +127,6 @@ const Explore = () => {
   };
 
   const renderVideoCard = (video) => {
-    const index = 0;
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -399,7 +405,6 @@ const Explore = () => {
               (() => {
                 const filteredVideos = getFilteredVideos();
                 if (filteredVideos.length === 0) {
-                  
                   return (
                     <EmptyState
                       icon={Video}

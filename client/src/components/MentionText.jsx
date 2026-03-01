@@ -11,33 +11,32 @@ import { Link } from 'react-router-dom';
 const MentionText = ({ text }) => {
     if (!text) return null;
 
-    // Regex to match @username (alphanumeric and underscore)
-    const mentionRegex = /@(\w+)/g;
+    // Regex to match @username or #hashtag
+    // Capturing groups: 1 for @username, 2 for #hashtag
+    const regex = /(@(\w+))|(#(\w+))/g;
 
-    // Split text by mentions while keeping the separators (the matches)
-    const parts = text.split(mentionRegex);
-
-    // Find matches to identify which parts are mentions
-    const matches = text.match(mentionRegex) || [];
-
-    let matchIndex = 0;
+    // Use split with capturing groups to get all parts
+    // [textBefore, fullMention, username, fullHashtag, hashtag, textBetween, ...]
+    const parts = text.split(regex);
 
     return (
         <>
             {parts.map((part, index) => {
-                // Every second part (odd indexes) is a username if we captured it correctly
-                // But simpler logic: if the part matches a captured group from the regex
-                // we check if the original text had @ + part at this position.
+                // The way split works with 4 capturing groups:
+                // index % 5 === 0: plain text
+                // index % 5 === 1: @username (full)
+                // index % 5 === 2: username (name only)
+                // index % 5 === 3: #hashtag (full)
+                // index % 5 === 4: hashtag (tag only)
 
-                // Let's use a more robust way to reconstruct:
-                // When using split with a capturing group, the array will contain:
-                // [textBefore, match1, textBetween, match2, ..., textAfter]
+                const mod = index % 5;
 
-                if (index % 2 === 1) {
-                    const username = part;
-                    const fullMention = `@${username}`;
-                    matchIndex++;
+                if (mod === 0) {
+                    return <span key={index}>{part}</span>;
+                }
 
+                if (mod === 1 && part) {
+                    const username = parts[index + 1];
                     return (
                         <Link
                             key={index}
@@ -45,12 +44,27 @@ const MentionText = ({ text }) => {
                             className="text-primary font-bold hover:underline"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            {fullMention}
+                            {part}
                         </Link>
                     );
                 }
 
-                return <span key={index}>{part}</span>;
+                if (mod === 3 && part) {
+                    const tag = parts[index + 1];
+                    return (
+                        <Link
+                            key={index}
+                            to={`/explore?search=${encodeURIComponent(tag)}`}
+                            className="text-emerald-400 font-bold hover:underline"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {part}
+                        </Link>
+                    );
+                }
+
+                // Skip the inner capturing groups (username/hashtag name only)
+                return null;
             })}
         </>
     );
