@@ -3,11 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Video, FileText } from 'lucide-react';
 import PageWrapper from '@/components/ui/PageWrapper';
+import PageMeta from '@/components/PageMeta';
 import EmptyState from '@/components/ui/EmptyState';
 import VideoCard from '@/components/VideoCard';
 import PostCard from '@/components/PostCard';
 import { API } from '@/api';
 import { toast } from 'sonner';
+import { useSaved } from '@/hooks/useSaved';
 
 export default function PublicProfile() {
   const { userId } = useParams();
@@ -16,6 +18,7 @@ export default function PublicProfile() {
   const [videos, setVideos] = useState([]);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { isVideoSaved, isPostSaved, toggleVideo, togglePost, isLoggedIn } = useSaved();
 
   useEffect(() => {
     const invalid = !userId || userId === 'undefined' || userId === 'null' || userId.trim() === '';
@@ -93,6 +96,10 @@ export default function PublicProfile() {
 
   return (
     <PageWrapper>
+      <PageMeta
+        title={`${displayName}'s profile`}
+        description={`View ${displayName}'s videos and posts on HuddleUp.`}
+      />
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -144,6 +151,8 @@ export default function PublicProfile() {
                   key={video._id}
                   video={video}
                   onPlay={handleVideoPlay}
+                  isSaved={isVideoSaved(video._id)}
+                  onSaveToggle={isLoggedIn ? toggleVideo : undefined}
                 />
               ))}
             </div>
@@ -165,7 +174,12 @@ export default function PublicProfile() {
           ) : (
             <div className="space-y-4">
               {posts.map((post) => (
-                <PostCard key={post._id} post={post} />
+                <PostCard
+                key={post._id}
+                post={post}
+                isSaved={isPostSaved(post._id)}
+                onSaveToggle={isLoggedIn ? togglePost : undefined}
+              />
               ))}
             </div>
           )}

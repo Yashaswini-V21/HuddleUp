@@ -4,11 +4,12 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import  Badge  from "@/components/ui/badge";
 import PageWrapper from "@/components/ui/PageWrapper";
+import PageMeta from "@/components/PageMeta";
 import { Trash2, AlertTriangle, CheckCircle, Video, FileText, MessageSquare, Users, Flag, BarChart3 } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL ;
 
 export default function Admin() {
     const navigate = useNavigate();
@@ -207,6 +208,7 @@ export default function Admin() {
     if (loading) {
         return (
             <PageWrapper>
+                <PageMeta title="Admin" noIndex />
                 <div className="flex items-center justify-center min-h-[60vh]">
                     <div className="text-zinc-400">Loading...</div>
                 </div>
@@ -220,6 +222,7 @@ export default function Admin() {
 
     return (
         <PageWrapper>
+            <PageMeta title="Admin" description="HuddleUp admin dashboard." noIndex />
             <div className="max-w-7xl mx-auto space-y-6">
                 {/* Header */}
                 <div className="border-b border-zinc-800 pb-6">

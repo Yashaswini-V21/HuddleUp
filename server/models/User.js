@@ -28,10 +28,14 @@ const UserSchema = new mongoose.Schema({
         type: String,
         default: ""
     },
+    savedVideos: [{ type: mongoose.Schema.Types.ObjectId, ref: "Video" }],
+    savedPosts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Post" }],
     isAdmin: {
         type: Boolean,
         default: false
     },
+    resetPasswordToken: { type: String },
+    resetPasswordExpires: { type: Date },
 }, { timestamps: true })
 
 module.exports= mongoose.model("User",UserSchema)
