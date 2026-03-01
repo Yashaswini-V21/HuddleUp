@@ -28,6 +28,7 @@ const adminRoutes = require("./routes/admin")
 const userRoutes = require("./routes/user")
 const savedRoutes = require("./routes/saved")
 const feedRoutes = require("./routes/feed")
+const playlistRoutes = require("./routes/playlist")
 
 dotenv.config();
 initRedis();
@@ -84,6 +85,7 @@ app.use("/api", apiLimiter, savedRoutes)
 app.use("/api/notifications", apiLimiter, notificationRoutes);
 app.use("/api/admin", adminLimiter, adminRoutes);
 app.use("/api/feed", feedLimiter, feedRoutes);
+app.use("/api/playlists", apiLimiter, playlistRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.get("/api", (req, res) => {

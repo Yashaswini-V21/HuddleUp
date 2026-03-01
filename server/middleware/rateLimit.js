@@ -23,28 +23,15 @@ const createStore = (prefix) => {
 };
 
 /**
- * Extract user ID from request for user-based rate limiting
- */
-const getUserId = (req) => {
-    if (req.user?.id) {
-        return `user_${req.user.id}`;
-    }
-    return null;
-};
-
-/**
- * General API limiter - 100 requests per 15 minutes
+ * General API limiter - 1000 requests per 15 minutes (increased for development)
  * Applied to most API routes
  */
 const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 100,
+    max: 1000, // Increased from 100 to 1000
     standardHeaders: true,
     legacyHeaders: false,
     store: createStore("api"),
-    keyGenerator: (req) => {
-        return getUserId(req) || req.ip;
-    },
     message: { status: 429, message: "Too many requests, please try again later." },
     skip: (req) => false,
     handler: (req, res) => {
@@ -57,12 +44,12 @@ const apiLimiter = rateLimit({
 });
 
 /**
- * Strict auth limiter - 15 requests per 15 minutes
+ * Strict auth limiter - 100 requests per 15 minutes (increased for development)
  * Applied to login, registration, and password reset endpoints
  */
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 15,
+    max: 100, // Increased from 15 to 100
     standardHeaders: true,
     legacyHeaders: false,
     store: createStore("auth"),
@@ -87,9 +74,6 @@ const feedLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     store: createStore("feed"),
-    keyGenerator: (req) => {
-        return getUserId(req) || req.ip;
-    },
     message: { status: 429, message: "Too many feed requests, please slow down." },
     skip: (req) => false,
     handler: (req, res) => {
@@ -111,9 +95,6 @@ const videoUploadLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     store: createStore("video_upload"),
-    keyGenerator: (req) => {
-        return getUserId(req) || req.ip;
-    },
     message: { status: 429, message: "Too many video uploads, please try again later." },
     skip: (req) => false,
     handler: (req, res) => {
@@ -135,9 +116,6 @@ const searchLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     store: createStore("search"),
-    keyGenerator: (req) => {
-        return getUserId(req) || req.ip;
-    },
     message: { status: 429, message: "Too many search requests." },
     skip: (req) => false,
     handler: (req, res) => {
@@ -159,9 +137,6 @@ const commentLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     store: createStore("comment"),
-    keyGenerator: (req) => {
-        return getUserId(req) || req.ip;
-    },
     message: { status: 429, message: "Too many comments, please slow down." },
     skip: (req) => false,
     handler: (req, res) => {
@@ -183,9 +158,6 @@ const postCreationLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     store: createStore("post_creation"),
-    keyGenerator: (req) => {
-        return getUserId(req) || req.ip;
-    },
     message: { status: 429, message: "Too many posts created, please try again later." },
     skip: (req) => false,
     handler: (req, res) => {
@@ -228,9 +200,6 @@ const adminLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     store: createStore("admin"),
-    keyGenerator: (req) => {
-        return getUserId(req) || req.ip;
-    },
     message: { status: 429, message: "Too many admin operations." },
     skip: (req) => false,
     handler: (req, res) => {
