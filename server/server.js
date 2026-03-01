@@ -14,6 +14,7 @@ const friendRoutes = require("./routes/friend")
 const adminRoutes = require("./routes/admin")
 const userRoutes = require("./routes/user")
 const analyticsRoutes = require("./routes/analytics")
+const searchRoutes = require("./routes/search")
 
 dotenv.config();
 const app = express();
@@ -62,6 +63,7 @@ app.use("/api", userRoutes)
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api", searchRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.get("/api", (req, res) => {

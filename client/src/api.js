@@ -19,3 +19,14 @@ export const getNotifications = async (token) => {
     },
   }).then((res) => res.json());
 };
+
+// ─── Search ──────────────────────────────────────────────────────────────────
+
+/**
+ * @param {{ q: string, type?: string, page?: number, limit?: number, sortBy?: string }} params
+ */
+export const searchContent = ({ q, type = "all", page = 1, limit = 10, sortBy = "relevance" }) =>
+  API.get("/search", { params: { q, type, page, limit, sortBy } }).then((r) => r.data);
+
+export const fetchSuggestions = (q) =>
+  API.get("/search/suggestions", { params: { q } }).then((r) => r.data);
