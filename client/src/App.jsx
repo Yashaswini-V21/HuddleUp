@@ -14,6 +14,7 @@ import Friends from './pages/Friends';
 import Contact from './pages/Contact';
 import About from './pages/About';
 import Profile from './pages/Profile';
+import PublicProfile from './pages/PublicProfile';
 import Feedback from './pages/Feedback';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Contributor from './pages/Contributor';

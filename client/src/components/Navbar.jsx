@@ -1,18 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { motion, useScroll, useMotionValueEvent, AnimatePresence } from "framer-motion";
-import { Menu, X, Bell, Moon, Sun, Shield, User, LogOut } from "lucide-react";
+import { Menu, X, Bell, Moon, Sun, Search, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logout, isLoggedIn } from "../utils/auth";
 import { toast } from "sonner";
 import axios from "axios";
+import { fetchSuggestions } from "@/api";
+import { useTheme } from "@/context/theme-context.jsx";
 import { useNotifications } from "@/context/NotificationContext.jsx";
 import { useNotificationFeed } from "@/hooks/useNotificationFeed";
-import { useTheme } from "@/context/theme-context.jsx";
-
-const API_URL = import.meta.env.VITE_API_URL ;
-
-
 
 
 export default function Navbar() {
@@ -28,7 +25,14 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [username, setUsername] = useState("");
+
+  // ── Search state ──────────────────────────────────────
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [suggLoading, setSuggLoading] = useState(false);
+  const searchInputRef = useRef(null);
+  const debounceTimerRef = useRef(null);
   const { friendRequests } = useNotifications();
   const {
     notifications: activityNotifications,
@@ -41,6 +45,62 @@ export default function Navbar() {
   useMotionValueEvent(scrollY, "change", (latest) => {
     setScrolled(latest > 40);
   });
+
+  // ── Ctrl+K / Cmd+K shortcut ───────────────────────────
+  useEffect(() => {
+    const handler = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+        setTimeout(() => searchInputRef.current?.focus(), 50);
+      }
+      if (e.key === "Escape") {
+        setSearchOpen(false);
+        setSuggestions([]);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
+  // ── Debounced autocomplete ────────────────────────────
+  const handleSearchInputChange = (value) => {
+    setSearchQuery(value);
+    clearTimeout(debounceTimerRef.current);
+    if (!value.trim() || value.trim().length < 2) {
+      setSuggestions([]);
+      return;
+    }
+    debounceTimerRef.current = setTimeout(async () => {
+      setSuggLoading(true);
+      try {
+        const data = await fetchSuggestions(value.trim());
+        setSuggestions(data || []);
+      } catch {
+        setSuggestions([]);
+      } finally {
+        setSuggLoading(false);
+      }
+    }, 300);
+  };
+
+  const commitSearch = (q) => {
+    if (!q.trim()) return;
+    try {
+      const history = JSON.parse(localStorage.getItem("searchHistory") || "[]");
+      const updated = [q.trim(), ...history.filter((h) => h !== q.trim())].slice(0, 10);
+      localStorage.setItem("searchHistory", JSON.stringify(updated));
+    } catch {}
+    setSearchOpen(false);
+    setSuggestions([]);
+    setSearchQuery("");
+    navigate(`/search?q=${encodeURIComponent(q.trim())}`);
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    commitSearch(searchQuery);
+  };
 
   const checkAdminStatus = async () => {
     if (!isLoggedIn()) {
@@ -141,6 +201,74 @@ fetchNotifications();
           >
             HuddleUp
           </motion.div>
+
+          {/* ── Search bar (desktop) ── */}
+          <div className="hidden md:flex items-center relative">
+            <AnimatePresence>
+              {searchOpen ? (
+                <motion.form
+                  key="searchbar"
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: 280, opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  onSubmit={handleSearchSubmit}
+                  className="relative overflow-visible"
+                >
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none z-10" />
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => handleSearchInputChange(e.target.value)}
+                    onKeyDown={(e) => e.key === "Escape" && setSearchOpen(false)}
+                    placeholder="Search videos, creators, hashtags…"
+                    className="w-full pl-9 pr-8 py-2 rounded-xl bg-white/10 border border-white/15 text-white text-sm placeholder:text-zinc-500 focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/20"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => { setSearchOpen(false); setSuggestions([]); setSearchQuery(""); }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                  {/* Suggestions dropdown */}
+                  {suggestions.length > 0 && (
+                    <div className="absolute top-full left-0 mt-2 w-full bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden z-[200]">
+                      {suggestions.map((s, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => commitSearch(s.label)}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-zinc-300 hover:bg-white/10 hover:text-white transition text-left"
+                        >
+                          {s.type === "user" ? (
+                            <span className="text-purple-400 text-xs font-semibold uppercase tracking-wider">Creator</span>
+                          ) : (
+                            <span className="text-cyan-400 text-xs font-semibold uppercase tracking-wider">Video</span>
+                          )}
+                          <span className="truncate">{s.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </motion.form>
+              ) : (
+                <motion.button
+                  key="searchbtn"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => { setSearchOpen(true); setTimeout(() => searchInputRef.current?.focus(), 50); }}
+                  className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-zinc-400 hover:text-cyan-400 transition-all duration-300 relative group"
+                  title="Search (Ctrl+K)"
+                >
+                  <Search className="w-5 h-5" />
+                  <span className="absolute inset-0 rounded-xl bg-cyan-500/10 opacity-0 group-hover:opacity-100 blur-lg transition-opacity" />
+                </motion.button>
+              )}
+            </AnimatePresence>
+          </div>
 
           {/* Desktop Links */}
           <div className="hidden md:flex items-center gap-8 relative">
@@ -380,21 +508,76 @@ fetchNotifications();
         </div>
       </div>
 
-          {/* Mobile Menu */}
-          {open && (
-            <>
-              <div
-                className="fixed inset-0 z-40 md:hidden"
-                aria-hidden
-                onClick={() => setOpen(false)}
+      {/* Mobile Menu */}
+      {open && (
+        <>
+          <div
+            className="fixed inset-0 z-40 md:hidden"
+            aria-hidden
+            onClick={() => setOpen(false)}
+          />
+          <div className="md:hidden border-t border-white/10 bg-zinc-950/95 backdrop-blur-xl relative z-50">
+          <div className="px-6 py-4 space-y-4">
+
+            {/* Mobile Search */}
+            <form
+              onSubmit={(e) => { e.preventDefault(); commitSearch(searchQuery); setOpen(false); }}
+              className="relative"
+            >
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => handleSearchInputChange(e.target.value)}
+                placeholder="Search videos, creators, hashtags…"
+                className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm placeholder:text-zinc-500 focus:outline-none focus:border-cyan-500/60"
               />
-              <div className="md:hidden border-t border-white/10 bg-zinc-950/95 backdrop-blur-xl relative z-50">
-                <div className="px-6 py-4 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm dark:text-zinc-400 text-slate-600">Theme</span>
-                    <button
-                      onClick={toggleTheme}
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-full dark:bg-white/5 bg-slate-100 dark:border-white/10 border-slate-300 border text-xs dark:text-zinc-300 text-slate-700"
+            </form>
+
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-zinc-400">Theme</span>
+              <button
+                onClick={toggleTheme}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs text-zinc-300"
+              >
+                {theme === "dark" ? (
+                  <>
+                    <Sun className="w-4 h-4" />
+                    <span>Light</span>
+                  </>
+                ) : (
+                  <>
+                    <Moon className="w-4 h-4" />
+                    <span>Dark</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {links.map(({ to, label }) => (
+              <NavLink
+                key={to}
+                to={to}
+                className="block text-zinc-300 hover:text-white transition"
+              >
+                {label}
+              </NavLink>
+            ))}
+
+            <div className="pt-4 border-t border-white/10 flex gap-3">
+              {loggedIn ? (
+                <>
+                  <Button
+                    onClick={() => navigate("/profile")}
+                    variant="outline"
+                    className="w-full border-blue-400 text-blue-400"
+                  >
+                    Profile
+                  </Button>
+                  {isAdmin && (
+                    <Button
+                      onClick={() => navigate("/admin")}
+                      className="w-full bg-gradient-to-r from-purple-600 to-indigo-600"
                     >
                       {theme === "dark" ? (
                         <>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { motion } from 'framer-motion';
 import PageWrapper from '@/components/ui/PageWrapper';
@@ -6,6 +6,7 @@ import PageMeta from '@/components/PageMeta';
 import EmptyState from '@/components/ui/EmptyState';
 import { TrendingUp, Clock, Flame, Globe, ChevronRight, Search, Play, User, Link2, Video, Bookmark, Eye, Heart } from 'lucide-react';
 import VideoPlayer from '@/components/VideoPlayer';
+import ShareMenu from '@/components/ui/ShareMenu';
 import { API } from '@/api';
 import { toast } from 'sonner';
 import { getShareUrl, copyLinkToClipboard } from '@/utils/share';
@@ -24,33 +25,39 @@ const Explore = () => {
   const [sortBy, setSortBy] = useState('newest'); // newest | views | likes
   const [allVideos, setAllVideos] = useState([]);
   const hasSearch = searchTerm.trim() !== '' || activeFilter !== 'ALL';
+  const fetchInProgressRef = useRef(false);
 
   const fetchAllVideos = async () => {
+    // Prevent duplicate requests
+    if (fetchInProgressRef.current) return;
+    
+    fetchInProgressRef.current = true;
     try {
       const params = sortBy ? { sort: sortBy } : {};
       const res = await API.get("/videos", { params });
       setAllVideos(Array.isArray(res.data) ? res.data : []);
     } catch (error) {
       console.error("Error fetching videos:", error);
+    } finally {
+      fetchInProgressRef.current = false;
     }
   };
 
   const getFilteredVideos = () => {
-  return allVideos.filter((video) => {
+    return allVideos.filter((video) => {
+      // Search filter
+      const matchesSearch =
+        searchTerm.trim() === '' ||
+        video.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        video.description?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    // Search filter
-    const matchesSearch =
-      searchTerm.trim() === '' ||
-      video.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      video.description?.toLowerCase().includes(searchTerm.toLowerCase());
+      // Category filter
+      const matchesCategory =
+        activeFilter === 'ALL' || video.category === activeFilter;
 
-    // Category filter
-    const matchesCategory =
-      activeFilter === 'ALL' || video.category === activeFilter;
-
-    return matchesSearch && matchesCategory;
-  });
-};
+      return matchesSearch && matchesCategory;
+    });
+  };
 
   useEffect(() => {
     fetchAllVideos();
@@ -59,6 +66,14 @@ const Explore = () => {
   useEffect(() => {
     if (location.pathname === "/explore") fetchAllVideos();
   }, [location.pathname]);
+
+  // Handle search parameter from URL (e.g., from hashtag links)
+  useEffect(() => {
+    const query = searchParams.get('search');
+    if (query) {
+      setSearchTerm(query);
+    }
+  }, [searchParams]);
 
   const shareVideoId = searchParams.get('video');
   useEffect(() => {
@@ -112,7 +127,6 @@ const Explore = () => {
   };
 
   const renderVideoCard = (video) => {
-    const index = 0;
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -173,6 +187,11 @@ const Explore = () => {
           >
             <Bookmark className={`w-4 h-4 ${isVideoSaved(video._id) ? 'fill-current' : ''}`} />
           </button>
+          <ShareMenu 
+            url={getShareUrl('video', video._id || video.id)}
+            title={video.title}
+            description={video.description}
+          />
           <button
             onClick={(e) => handleCopyLink(e, video)}
             className="p-2 rounded-lg transition-opacity hover:opacity-100 opacity-90"
@@ -386,7 +405,6 @@ const Explore = () => {
               (() => {
                 const filteredVideos = getFilteredVideos();
                 if (filteredVideos.length === 0) {
-                  
                   return (
                     <EmptyState
                       icon={Video}
