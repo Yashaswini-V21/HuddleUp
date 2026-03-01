@@ -4,6 +4,7 @@ const Video = require("../models/Video");
 const Post = require("../models/Post");
 const User = require("../models/User");
 const Notification = require("../models/Notification");
+const { trackLike, trackView, trackComment } = require("./analyticsController");
 
 // Helper: create notification (avoid self-notify and duplicates in same second)
 async function createCommentNotification({ recipientId, senderId, type, resource, message }) {
@@ -63,6 +64,11 @@ exports.createComment = async (req, res) => {
     console.log("✅ Saved Comment:", saved);
 
     await saved.populate("userId", "username");
+
+    // Track comment event on video analytics asynchronously
+    if (commentData.videoId) {
+      trackComment(commentData.videoId.toString()).catch(() => {});
+    }
 
     // --- Notifications ---
     const senderUser = await User.findById(userId).select("username").lean();
@@ -242,6 +248,9 @@ exports.likeVideo = async (req, res) => {
 
     const updatedVideo = await Video.findByIdAndUpdate(id, update, { new: true });
 
+    // Track like/unlike event asynchronously
+    trackLike(id, userId, !isLiked).catch(() => {});
+
     res.json({ likes: updatedVideo.likes.length, liked: !isLiked });
   } catch (err) {
     res.status(500).json({ message: "Error liking video", error: err.message });
@@ -253,6 +262,10 @@ exports.viewVideo = async (req, res) => {
   try {
     const video = await Video.findByIdAndUpdate(id, { $inc: { views: 1 } }, { new: true });
     if (!video) return res.status(404).json({ message: "Video Not Found" })
+
+    // Track view event with metadata asynchronously
+    trackView(id, req).catch(() => {});
+
     res.json({ views: video.views })
 
   } catch (err) {
