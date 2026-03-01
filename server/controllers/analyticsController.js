@@ -11,6 +11,7 @@ const UserAnalytics = require("../models/UserAnalytics");
 
 /** Detect device type from User-Agent string – no raw data stored. */
 function detectDevice(ua = "") {
+  if (!ua) return "unknown";
   const s = ua.toLowerCase();
   if (/ipad|tablet|(android(?!.*mobile))/.test(s)) return "tablet";
   if (/mobile|android|iphone|ipod|blackberry|windows phone/.test(s)) return "mobile";
@@ -64,6 +65,8 @@ exports.trackView = async (videoId, req) => {
     const device = detectDevice(req.headers["user-agent"]);
     const source = detectSource(req.headers["referer"] || req.headers["referrer"]);
     const hourOfDay = new Date().getHours();
+    // Populate country from Cloudflare header if available, otherwise "Unknown"
+    const country = req.headers["cf-ipcountry"] || "Unknown";
 
     // Write view log (lightweight, no PII stored)
     await ViewLog.create({
@@ -72,11 +75,11 @@ exports.trackView = async (videoId, req) => {
       device,
       source,
       hourOfDay,
+      country,
       timestamp: new Date(),
     });
 
     // Increment running totals (async, fire-and-forget)
-    const bucket = hourlyBucket();
     VideoAnalytics.findOneAndUpdate(
       { video: videoId },
       {
@@ -392,7 +395,7 @@ exports.getTrends = async (req, res) => {
     const videos = await Video.find({ postedBy: userId }).select("_id").lean();
     const videoIds = videos.map((v) => v._id);
 
-    if (!videoIds.length) return res.json({ views: [], likes: [], comments: [] });
+    if (!videoIds.length) return res.json({ period, views: [] });
 
     const viewTrend = await ViewLog.aggregate([
       { $match: { video: { $in: videoIds }, timestamp: { $gte: since } } },
@@ -406,7 +409,7 @@ exports.getTrends = async (req, res) => {
       { $project: { date: "$_id", views: "$count", _id: 0 } },
     ]);
 
-    res.json({ period, views: viewTrend });
+    res.json({ period, views: viewTrend }); // Note: likes/comments trends not yet implemented; extend when LikeLog/CommentLog are available
   } catch (err) {
     console.error("getTrends error:", err);
     res.status(500).json({ message: "Error fetching trends", error: err.message });

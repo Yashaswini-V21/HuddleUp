@@ -10,7 +10,7 @@ const search = async (req, res) => {
     const query = q.trim();
 
     if (!query) {
-      return res.json({ videos: [], users: [], hashtags: [], total: 0 });
+      return res.json({ videos: [], users: [], hashtags: [], total: 0, videoTotal: 0, userTotal: 0, hashtagTotal: 0 });
     }
 
     const limitNum = Math.min(parseInt(limit) || 10, 50);
@@ -36,6 +36,8 @@ const search = async (req, res) => {
       let videoSort = { createdAt: -1 };
       if (sortBy === "views") videoSort = { views: -1 };
       else if (sortBy === "date") videoSort = { uploadDate: -1 };
+      // "relevance" is an alias for recency — no text-score index available yet
+      // else if (sortBy === "relevance") videoSort = { createdAt: -1 }; // already the default
 
       const [videos, videoTotal] = await Promise.all([
         Video.find(videoFilter)
@@ -134,12 +136,13 @@ const search = async (req, res) => {
         if (!merged[tag]) merged[tag] = { tag, count: 0 };
         merged[tag].count += h.count;
       }
-      const hashtags = Object.values(merged)
-        .sort((a, b) => b.count - a.count)
-        .slice(0, type === "all" ? 10 : limitNum);
+      const allHashtags = Object.values(merged)
+        .sort((a, b) => b.count - a.count);
+      const hashtagTotal = allHashtags.length;
+      const hashtags = allHashtags.slice(0, type === "all" ? 10 : limitNum);
 
       results.hashtags = hashtags;
-      results.hashtagTotal = hashtags.length;
+      results.hashtagTotal = hashtagTotal;
     }
 
     return res.json(results);

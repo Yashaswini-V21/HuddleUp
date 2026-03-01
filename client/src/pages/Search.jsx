@@ -28,17 +28,22 @@ const TABS = [
 ];
 
 const SORT_OPTIONS = [
-  { value: "relevance", label: "Relevance" },
+  { value: "relevance", label: "Recent" },
   { value: "date",      label: "Latest" },
   { value: "views",     label: "Most Viewed" },
 ];
 
 const API_BASE = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:5000";
 
+// Escape all special regex metacharacters in a user-supplied string
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function VideoResultCard({ video, query }) {
   const navigate = useNavigate();
   const highlight = (text = "") => {
-    const parts = text.split(new RegExp(`(${query})`, "gi"));
+    const parts = text.split(new RegExp(`(${escapeRegex(query)})`, "gi"));
     return parts.map((part, i) =>
       part.toLowerCase() === query.toLowerCase() ? (
         <mark key={i} className="bg-cyan-500/30 text-cyan-300 rounded px-0.5">
@@ -96,7 +101,7 @@ function VideoResultCard({ video, query }) {
 function UserResultCard({ user, query }) {
   const navigate = useNavigate();
   const highlight = (text = "") => {
-    const parts = text.split(new RegExp(`(${query})`, "gi"));
+    const parts = text.split(new RegExp(`(${escapeRegex(query)})`, "gi"));
     return parts.map((part, i) =>
       part.toLowerCase() === query.toLowerCase() ? (
         <mark key={i} className="bg-purple-500/30 text-purple-300 rounded px-0.5">
@@ -133,7 +138,8 @@ function HashtagResultCard({ tag, query, onTagClick }) {
   const highlight = (text = "") => {
     const clean = text.replace(/^#/, "");
     const cleanQ = query.replace(/^#/, "");
-    const parts = clean.split(new RegExp(`(${cleanQ})`, "gi"));
+    if (!cleanQ) return clean;
+    const parts = clean.split(new RegExp(`(${escapeRegex(cleanQ)})`, "gi"));
     return parts.map((part, i) =>
       part.toLowerCase() === cleanQ.toLowerCase() ? (
         <mark key={i} className="bg-pink-500/30 text-pink-300 rounded px-0.5">
