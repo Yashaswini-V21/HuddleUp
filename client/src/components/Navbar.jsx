@@ -1,16 +1,16 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { motion, useScroll, useMotionValueEvent, AnimatePresence } from "framer-motion";
-import { Menu, X, Bell, Moon, Sun, Search, Shield } from "lucide-react";
+import { Menu, X, Bell, Moon, Sun, Search, Shield, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logout, isLoggedIn } from "../utils/auth";
 import { toast } from "sonner";
+import { API } from "@/api";
 import axios from "axios";
 import { fetchSuggestions } from "@/api";
 import { useTheme } from "@/context/theme-context.jsx";
 import { useNotifications } from "@/context/NotificationContext.jsx";
 import { useNotificationFeed } from "@/hooks/useNotificationFeed";
-
 
 export default function Navbar() {
   const location = useLocation();
@@ -25,6 +25,7 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [username, setUsername] = useState("User");
 
   // ── Search state ──────────────────────────────────────
   const [searchOpen, setSearchOpen] = useState(false);
@@ -41,6 +42,8 @@ export default function Navbar() {
     markAllAsRead,
     refetch: refetchActivity,
   } = useNotificationFeed({ limit: 15 });
+
+  const API_URL = import.meta.env.VITE_API_URL;
 
   useMotionValueEvent(scrollY, "change", (latest) => {
     setScrolled(latest > 40);
@@ -145,15 +148,15 @@ export default function Navbar() {
     if (!loggedIn) return;
 
     const fetchNotifications = async () => {
-  try {
-    const res = await API.get("/notifications");
-    setNotifications(res.data);
-  } catch (err) {
-    console.error("Failed to fetch notifications", err);
-  }
-};
+      try {
+        const res = await API.get("/notifications");
+        setNotifications(res.data);
+      } catch (err) {
+        console.error("Failed to fetch notifications", err);
+      }
+    };
 
-fetchNotifications();
+    fetchNotifications();
   }, [loggedIn]);
 
   const handleLogout = () => {
@@ -321,67 +324,67 @@ fetchNotifications();
 
             {loggedIn ? (
               <>
-            {/* Notification Bell */}
-            <div className="relative">
-              {showNotifications && (
-                <div
-                  className="fixed inset-0 z-[99]"
-                  aria-hidden
-                  onClick={() => setShowNotifications(false)}
-                />
-              )}
-              <button
-                onClick={() => {
-                  setShowNotifications(!showNotifications);
-                  if (!showNotifications) refetchActivity();
-                }}
-                className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-zinc-400 hover:text-emerald-400 transition-all duration-300 relative group"
-              >
-                <Bell className="w-5 h-5" />
-                {(friendRequests.length > 0 || activityUnreadCount > 0) && (
-                  <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 bg-emerald-500 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-zinc-950 shadow-lg shadow-emerald-500/20">
-                    {friendRequests.length + activityUnreadCount}
-                  </span>
-                )}
-
-                <span className="absolute inset-0 rounded-xl bg-emerald-500/20 opacity-0 group-hover:opacity-100 blur-xl transition-opacity animate-pulse" />
-              </button>
-
-              <AnimatePresence>
-                {showNotifications && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -15 }}
-                    transition={{ duration: 0.3 }}
-                    className="absolute right-0 mt-4 w-80 bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-4 space-y-3 max-h-96 overflow-y-auto"
+                {/* Notification Bell */}
+                <div className="relative">
+                  {showNotifications && (
+                    <div
+                      className="fixed inset-0 z-[99]"
+                      aria-hidden
+                      onClick={() => setShowNotifications(false)}
+                    />
+                  )}
+                  <button
+                    onClick={() => {
+                      setShowNotifications(!showNotifications);
+                      if (!showNotifications) refetchActivity();
+                    }}
+                    className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-zinc-400 hover:text-emerald-400 transition-all duration-300 relative group"
                   >
-                    {notifications.length === 0 ? (
-                      <p className="text-sm text-zinc-400">
-                        No notifications
-                      </p>
-                    ) : (
-                      notifications.map((n) => (
-                        <motion.div
-                          whileHover={{ scale: 1.02 }}
-                          key={n._id}
-                          className={`p-3 rounded-xl text-sm transition cursor-pointer ${
-                            n.isRead
-                              ? "bg-zinc-800"
-                              : "bg-gradient-to-r from-indigo-600/30 to-purple-600/30"
-                          }`}
-                        >
-                          <strong className="text-white">
-                            {n.sender?.username}
-                          </strong>{" "}
-                          <span className="text-zinc-300">{n.type}</span>
-                        </motion.div>
-                      ))
+                    <Bell className="w-5 h-5" />
+                    {(friendRequests.length > 0 || activityUnreadCount > 0) && (
+                      <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 bg-emerald-500 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-zinc-950 shadow-lg shadow-emerald-500/20">
+                        {friendRequests.length + activityUnreadCount}
+                      </span>
                     )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+
+                    <span className="absolute inset-0 rounded-xl bg-emerald-500/20 opacity-0 group-hover:opacity-100 blur-xl transition-opacity animate-pulse" />
+                  </button>
+
+                  <AnimatePresence>
+                    {showNotifications && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -15 }}
+                        transition={{ duration: 0.3 }}
+                        className="absolute right-0 mt-4 w-80 bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-4 space-y-3 max-h-96 overflow-y-auto"
+                      >
+                        {notifications.length === 0 ? (
+                          <p className="text-sm text-zinc-400">
+                            No notifications
+                          </p>
+                        ) : (
+                          notifications.map((n) => (
+                            <motion.div
+                              whileHover={{ scale: 1.02 }}
+                              key={n._id}
+                              className={`p-3 rounded-xl text-sm transition cursor-pointer ${
+                                n.isRead
+                                  ? "bg-zinc-800"
+                                  : "bg-gradient-to-r from-indigo-600/30 to-purple-600/30"
+                              }`}
+                            >
+                              <strong className="text-white">
+                                {n.sender?.username}
+                              </strong>{" "}
+                              <span className="text-zinc-300">{n.type}</span>
+                            </motion.div>
+                          ))
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
 
                 {/* Profile Avatar Dropdown */}
                 <div className="relative">
@@ -517,144 +520,115 @@ fetchNotifications();
             onClick={() => setOpen(false)}
           />
           <div className="md:hidden border-t border-white/10 bg-zinc-950/95 backdrop-blur-xl relative z-50">
-          <div className="px-6 py-4 space-y-4">
+            <div className="px-6 py-4 space-y-4">
 
-            {/* Mobile Search */}
-            <form
-              onSubmit={(e) => { e.preventDefault(); commitSearch(searchQuery); setOpen(false); }}
-              className="relative"
-            >
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => handleSearchInputChange(e.target.value)}
-                placeholder="Search videos, creators, hashtags…"
-                className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm placeholder:text-zinc-500 focus:outline-none focus:border-cyan-500/60"
-              />
-            </form>
-
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-zinc-400">Theme</span>
-              <button
-                onClick={toggleTheme}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs text-zinc-300"
+              {/* Mobile Search */}
+              <form
+                onSubmit={(e) => { e.preventDefault(); commitSearch(searchQuery); setOpen(false); }}
+                className="relative"
               >
-                {theme === "dark" ? (
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => handleSearchInputChange(e.target.value)}
+                  placeholder="Search videos, creators, hashtags…"
+                  className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm placeholder:text-zinc-500 focus:outline-none focus:border-cyan-500/60"
+                />
+              </form>
+
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-zinc-400">Theme</span>
+                <button
+                  onClick={toggleTheme}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs text-zinc-300"
+                >
+                  {theme === "dark" ? (
+                    <>
+                      <Sun className="w-4 h-4" />
+                      <span>Light</span>
+                    </>
+                  ) : (
+                    <>
+                      <Moon className="w-4 h-4" />
+                      <span>Dark</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {links.map(({ to, label }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  className="block text-zinc-300 hover:text-white transition"
+                  onClick={() => setOpen(false)}
+                >
+                  {label}
+                </NavLink>
+              ))}
+
+              <div className="pt-4 border-t border-white/10 flex gap-3">
+                {loggedIn ? (
                   <>
-                    <Sun className="w-4 h-4" />
-                    <span>Light</span>
+                    <Button
+                      onClick={() => {
+                        navigate("/profile");
+                        setOpen(false);
+                      }}
+                      variant="outline"
+                      className="w-full border-blue-400 text-blue-400"
+                    >
+                      <User className="w-4 h-4 mr-2" />
+                      Profile
+                    </Button>
+                    {isAdmin && (
+                      <Button
+                        onClick={() => {
+                          navigate("/admin");
+                          setOpen(false);
+                        }}
+                        className="w-full bg-gradient-to-r from-purple-600 to-indigo-600"
+                      >
+                        <Shield className="w-4 h-4 mr-2" />
+                        Admin
+                      </Button>
+                    )}
+                    <Button
+                      onClick={handleLogout}
+                      className="w-full bg-red-600 hover:bg-red-700"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Logout
+                    </Button>
                   </>
                 ) : (
                   <>
-                    <Moon className="w-4 h-4" />
-                    <span>Dark</span>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        navigate("/login");
+                        setOpen(false);
+                      }}
+                      className="w-full border-zinc-700"
+                    >
+                      Login
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        navigate("/register");
+                        setOpen(false);
+                      }}
+                      className="w-full bg-gradient-to-r from-blue-500 to-indigo-600"
+                    >
+                      Register
+                    </Button>
                   </>
                 )}
-              </button>
-            </div>
-
-            {links.map(({ to, label }) => (
-              <NavLink
-                key={to}
-                to={to}
-                className="block text-zinc-300 hover:text-white transition"
-              >
-                {label}
-              </NavLink>
-            ))}
-
-            <div className="pt-4 border-t border-white/10 flex gap-3">
-              {loggedIn ? (
-                <>
-                  <Button
-                    onClick={() => navigate("/profile")}
-                    variant="outline"
-                    className="w-full border-blue-400 text-blue-400"
-                  >
-                    Profile
-                  </Button>
-                  {isAdmin && (
-                    <Button
-                      onClick={() => navigate("/admin")}
-                      className="w-full bg-gradient-to-r from-purple-600 to-indigo-600"
-                    >
-                      {theme === "dark" ? (
-                        <>
-                          <Sun className="w-4 h-4" />
-                          <span>Light</span>
-                        </>
-                      ) : (
-                        <>
-                          <Moon className="w-4 h-4" />
-                          <span>Dark</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-    
-                  {links.map(({ to, label }) => (
-                    <NavLink
-                      key={to}
-                      to={to}
-                      className="block dark:text-zinc-300 text-slate-600 dark:hover:text-white hover:text-slate-900 transition"
-                    >
-                      {label}
-                    </NavLink>
-                  ))}
-    
-                  <div className="pt-4 border-t border-white/10 flex gap-3">
-                    {loggedIn ? (
-                      <>
-                        <Button
-                          onClick={() => {
-                            navigate("/profile");
-                            setOpen(false);
-                          }}
-                          variant="outline"
-                          className="w-full border-blue-400 text-blue-400"
-                        >
-                          <User className="w-4 h-4 mr-2" />
-                          Profile
-                        </Button>
-                        {isAdmin && (
-                          <Button
-                            onClick={() => navigate("/admin")}
-                            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600"
-                          >
-                            <Shield className="w-4 h-4 mr-2" />
-                            Admin
-                          </Button>
-                        )}
-                        <Button
-                          onClick={handleLogout}
-                          className="w-full bg-red-600 hover:bg-red-700"
-                        >
-                          <LogOut className="w-4 h-4 mr-2" />
-                          Logout
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <Button
-                          variant="outline"
-                          onClick={() => navigate("/login")}
-                          className="w-full border-zinc-700"
-                        >
-                          Login
-                        </Button>
-                        <Button
-                          onClick={() => navigate("/register")}
-                          className="w-full bg-gradient-to-r from-blue-500 to-indigo-600"
-                        >
-                          Register
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </div>
               </div>
-            </>
+            </div>
+          </div>
+        </>
       )}
     </motion.nav>
   );

@@ -26,6 +26,9 @@ const postRoutes = require("./routes/post")
 const friendRoutes = require("./routes/friend")
 const adminRoutes = require("./routes/admin")
 const userRoutes = require("./routes/user")
+const savedRoutes = require("./routes/saved")
+const feedRoutes = require("./routes/feed")
+const playlistRoutes = require("./routes/playlist")
 const analyticsRoutes = require("./routes/analytics")
 
 dotenv.config();
@@ -117,5 +120,62 @@ const connectDB = async () => {
 connectDB()
   .then(() => server.listen(5000, () => console.log("Server is running at port 5000 (with Socket.IO)")))
   .catch(err => console.log(err))
+
+// Graceful shutdown handling
+const gracefulShutdown = async (signal) => {
+  console.log(`\n${signal} received. Starting graceful shutdown...`);
+  
+  try {
+    // Close HTTP server
+    console.log('Closing HTTP server...');
+    await new Promise((resolve, reject) => {
+      server.close((err) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+    console.log('✅ HTTP server closed');
+
+    // Close video queue
+    if (videoQueue) {
+      console.log('Closing video queue...');
+      await videoQueue.close();
+      console.log('✅ Video queue closed');
+    }
+
+    // Close Redis connection
+    const { closeRedis } = require("./config/redis");
+    console.log('Closing Redis connection...');
+    await closeRedis();
+    console.log('✅ Redis connection closed');
+
+    // Close MongoDB connection
+    console.log('Closing MongoDB connection...');
+    await mongoose.connection.close();
+    console.log('✅ MongoDB connection closed');
+
+    console.log('✅ Graceful shutdown completed');
+    process.exit(0);
+  } catch (error) {
+    console.error('❌ Error during graceful shutdown:', error);
+    process.exit(1);
+  }
+};
+
+// Handle different shutdown signals
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGUSR2', () => gracefulShutdown('SIGUSR2')); // For nodemon
+
+// Handle uncaught exceptions and unhandled rejections
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+  gracefulShutdown('UNCAUGHT_EXCEPTION');
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  gracefulShutdown('UNHANDLED_REJECTION');
+});
 
 module.exports = { io, emitFeedEvent };
