@@ -4,9 +4,11 @@ import { motion } from 'framer-motion';
 import PageWrapper from '@/components/ui/PageWrapper';
 import PageMeta from '@/components/PageMeta';
 import EmptyState from '@/components/ui/EmptyState';
-import { TrendingUp, Clock, Flame, Globe, ChevronRight, Search, Play, User, Link2, Video, Bookmark, Eye, Heart } from 'lucide-react';
+import { TrendingUp, Clock, Flame, Globe, ChevronRight, Search, Play, User, Link2, Video, Bookmark, Eye, Heart, Plus } from 'lucide-react';
 import VideoPlayer from '@/components/VideoPlayer';
 import ShareMenu from '@/components/ui/ShareMenu';
+import PlaylistManager from '@/components/PlaylistManager';
+import AddToPlaylist from '@/components/AddToPlaylist';
 import { API } from '@/api';
 import { toast } from 'sonner';
 import { getShareUrl, copyLinkToClipboard } from '@/utils/share';
@@ -24,6 +26,7 @@ const Explore = () => {
   const [activeFilter, setActiveFilter] = useState('ALL');
   const [sortBy, setSortBy] = useState('newest'); // newest | views | likes
   const [allVideos, setAllVideos] = useState([]);
+  const [showAddToPlaylist, setShowAddToPlaylist] = useState(null);
   const hasSearch = searchTerm.trim() !== '' || activeFilter !== 'ALL';
   const fetchInProgressRef = useRef(false);
 
@@ -186,6 +189,25 @@ const Explore = () => {
             title={isVideoSaved(video._id) ? 'Unsave' : 'Save for later'}
           >
             <Bookmark className={`w-4 h-4 ${isVideoSaved(video._id) ? 'fill-current' : ''}`} />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!isLoggedIn) {
+                toast.error('Login to add to playlist');
+                return;
+              }
+              setShowAddToPlaylist(video._id || video.id);
+            }}
+            className="p-2 rounded-lg transition-opacity hover:opacity-100 opacity-90"
+            style={{
+              background: 'rgba(0,0,0,0.6)',
+              color: 'white',
+              border: '1px solid rgba(255,255,255,0.2)'
+            }}
+            title="Add to playlist"
+          >
+            <Plus className="w-4 h-4" />
           </button>
           <ShareMenu 
             url={getShareUrl('video', video._id || video.id)}
@@ -401,6 +423,9 @@ const Explore = () => {
           className="px-6 md:px-12 pb-16"
         >
           <div className="max-w-7xl mx-auto">
+            {/* Playlist Manager Section */}
+            {isLoggedIn && <PlaylistManager />}
+            
             {hasSearch ? (
               (() => {
                 const filteredVideos = getFilteredVideos();
@@ -448,6 +473,30 @@ const Explore = () => {
             video={selectedVideo}
             onClose={handleClosePlayer}
           />
+        )}
+
+        {/* Add to Playlist Modal */}
+        {showAddToPlaylist && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg w-full max-w-md" style={{ background: 'var(--bg-surface)' }}>
+              <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: 'var(--border-subtle)' }}>
+                <h3 className="font-semibold" style={{ color: 'var(--text-main)' }}>
+                  Add to Playlist
+                </h3>
+                <button
+                  onClick={() => setShowAddToPlaylist(null)}
+                  className="p-1 hover:bg-gray-100 rounded"
+                  style={{ color: 'var(--text-sub)' }}
+                >
+                  ×
+                </button>
+              </div>
+              <AddToPlaylist
+                videoId={showAddToPlaylist}
+                onClose={() => setShowAddToPlaylist(null)}
+              />
+            </div>
+          </div>
         )}
       </div>
     </PageWrapper>
